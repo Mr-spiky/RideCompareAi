@@ -53,7 +53,7 @@ const RideOption: React.FC<RideOptionProps> = ({
         </div>
         <div className="flex items-center space-x-1">
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span className="text-sm font-medium">{rating}</span>
+          <span className="text-sm font-medium">{rating.toFixed(1)}</span>
         </div>
       </div>
       
@@ -66,7 +66,7 @@ const RideOption: React.FC<RideOptionProps> = ({
             <span className="mx-2">•</span>
             <span>{travelTime} min travel</span>
           </div>
-          {recommended && recommendReason && (
+          {recommendReason && (
             <div className="mt-2 text-xs font-medium px-2 py-1 bg-white/20 rounded-full inline-block">
               {recommendReason}
             </div>

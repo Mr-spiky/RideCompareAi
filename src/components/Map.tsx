@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { googleMapsService } from '@/lib/googleMapsService';
 
 interface MapProps {
   source?: string;
@@ -8,53 +9,78 @@ interface MapProps {
 interface RouteInfo {
   distance: string;
   duration: string;
+  isReal: boolean; // Flag to indicate if data is real or simulated
 }
 
 const Map: React.FC<MapProps> = ({ source, destination }) => {
   const [routeInfo, setRouteInfo] = useState<RouteInfo>({
     distance: '0',
-    duration: '0'
+    duration: '0',
+    isReal: false
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Simulate fetching route information when source and destination change
+  // Fetch real or simulated route information
   useEffect(() => {
     if (source && destination) {
-      const fetchRouteInfo = setTimeout(() => {
-        const getRouteDetails = () => {
-          const knownRoutes: Record<string, RouteInfo> = {
-            'pesu rr-reva university': { distance: '38.8 km', duration: '1 hr 10 min' },
-            'pesu rr-downtown': { distance: '12.3 km', duration: '35 min' },
-            'downtown-marina': { distance: '5.7 km', duration: '15 min' },
-            'park view-green park': { distance: '7.9 km', duration: '22 min' },
-            'current location-reva university': { distance: '40.2 km', duration: '1 hr 15 min' },
-            'current location-downtown': { distance: '10.5 km', duration: '30 min' },
-          };
-
-          const routeKey = `${source.toLowerCase()}-${destination.toLowerCase()}`;
-          const reverseRouteKey = `${destination.toLowerCase()}-${source.toLowerCase()}`;
-
-          if (knownRoutes[routeKey]) {
-            return knownRoutes[routeKey];
-          } else if (knownRoutes[reverseRouteKey]) {
-            return knownRoutes[reverseRouteKey];
+      setIsLoading(true);
+      
+      const fetchRouteInfo = async () => {
+        try {
+          // Try to get real Google Maps data
+          if (googleMapsService.isConfigured()) {
+            const realData = await googleMapsService.getDistanceMatrix(source, destination);
+            
+            if (realData) {
+              setRouteInfo({
+                distance: realData.distance,
+                duration: realData.duration,
+                isReal: true
+              });
+              setIsLoading(false);
+              return;
+            }
           }
+          
+          // Fallback to simulated data if Google Maps fails or not configured
+          const sourceLength = source.length;
+          const destLength = destination.length;
+          const combinedLength = (sourceLength + destLength) % 20;
+          const baseDistance = 5 + combinedLength * 2.5;
+          const baseDuration = Math.round(baseDistance * 2.5);
 
-          const combinedLength = (source.length + destination.length) % 10;
-          const baseDistance = 5 + combinedLength * 3.5;
-          const baseDuration = Math.round(baseDistance * 1.8);
-
-          return {
+          setRouteInfo({
             distance: `${baseDistance.toFixed(1)} km`,
             duration: baseDuration >= 60 
               ? `${Math.floor(baseDuration / 60)} hr ${baseDuration % 60} min` 
-              : `${baseDuration} min`
-          };
-        };
+              : `${baseDuration} min`,
+            isReal: false
+          });
+        } catch (error) {
+          console.error('Error fetching route info:', error);
+          
+          // Fallback to simulated data on error
+          const sourceLength = source.length;
+          const destLength = destination.length;
+          const combinedLength = (sourceLength + destLength) % 20;
+          const baseDistance = 5 + combinedLength * 2.5;
+          const baseDuration = Math.round(baseDistance * 2.5);
 
-        setRouteInfo(getRouteDetails());
-      }, 500);
+          setRouteInfo({
+            distance: `${baseDistance.toFixed(1)} km`,
+            duration: baseDuration >= 60 
+              ? `${Math.floor(baseDuration / 60)} hr ${baseDuration % 60} min` 
+              : `${baseDuration} min`,
+            isReal: false
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-      return () => clearTimeout(fetchRouteInfo);
+      fetchRouteInfo();
+    } else {
+      setRouteInfo({ distance: '0', duration: '0', isReal: false });
     }
   }, [source, destination]);
 
@@ -159,7 +185,12 @@ const Map: React.FC<MapProps> = ({ source, destination }) => {
           </div>
 
           {/* Enhanced distance and time display */}
-          <div className="glass px-6 py-3 rounded-xl mt-6 border border-primary/20">
+          <div className="glass px-6 py-3 rounded-xl mt-6 border border-primary/20 relative">
+            {isLoading && (
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            )}
             <div className="flex items-center space-x-4 text-foreground">
               <div className="text-center">
                 <div className="text-lg font-bold text-primary">{routeInfo.distance}</div>
@@ -169,6 +200,12 @@ const Map: React.FC<MapProps> = ({ source, destination }) => {
               <div className="text-center">
                 <div className="text-lg font-bold text-accent-cyan">{routeInfo.duration}</div>
                 <div className="text-xs text-foreground/70 font-medium">Duration</div>
+              </div>
+            </div>
+            {/* Data source indicator */}
+            <div className="text-center mt-2">
+              <div className={`text-[10px] font-medium ${routeInfo.isReal ? 'text-green-400' : 'text-yellow-400'}`}>
+                {routeInfo.isReal ? '✓ Real Google Maps Data' : '⚠ Simulated Data'}
               </div>
             </div>
           </div>

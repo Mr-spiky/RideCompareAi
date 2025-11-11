@@ -1,17 +1,21 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import LocationInput from '@/components/LocationInput';
 import Map from '@/components/Map';
 import RideOptions from '@/components/RideOptions';
 import UserPreferences from '@/components/UserPreferences';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Info } from 'lucide-react';
+import { googleMapsService } from '@/lib/googleMapsService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
   const [source, setSource] = useState<string | undefined>();
   const [destination, setDestination] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
+  const [showApiWarning, setShowApiWarning] = useState(true);
+  const isGoogleMapsConfigured = googleMapsService.isConfigured();
   
   const handleSourceChange = (location: string) => {
     setSource(location);
@@ -36,6 +40,31 @@ const Index = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 mt-4">
+        {/* Google Maps API Status Alert */}
+        {!isGoogleMapsConfigured && showApiWarning && (
+          <Alert className="mb-6 glass border-yellow-500/50 bg-yellow-500/10">
+            <Info className="h-4 w-4 text-yellow-400" />
+            <AlertDescription className="text-white/90 flex items-center justify-between">
+              <span>
+                <strong>Demo Mode:</strong> Using simulated data. Add Google Maps API key for real distances. 
+                <a 
+                  href="/GOOGLE_MAPS_SETUP.md" 
+                  target="_blank" 
+                  className="underline ml-2 text-yellow-300 hover:text-yellow-200"
+                >
+                  Setup Guide
+                </a>
+              </span>
+              <button 
+                onClick={() => setShowApiWarning(false)}
+                className="text-white/60 hover:text-white ml-4"
+              >
+                ✕
+              </button>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="mb-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent leading-tight">
             Find Your Smartest Ride
