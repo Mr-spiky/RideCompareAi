@@ -1,6 +1,6 @@
 # 🚖 RideCompare.AI – Ride Smart
 
-**🔗 Live Demo**: link- [ride-smart-ai-compare.](https://ride-smart-ai-compare.vercel.app/)
+**🔗 Live Demo**: link- [ride-smart-ai-compare.](https://ride-compare-ai.vercel.app/)
 
 
 A smart AI-powered assistant that compares ride fares, ETAs, and travel options across **Ola**, **Uber**, and **Rapido** based on your source and destination. Save time and money with real-time insights and intelligent ride suggestions.
@@ -58,5 +58,5 @@ streamlit run app.py
 👨‍💻 Author
 Aarti Panchal
 AI Developer | B.Tech Student 
-📫 [aartipanchal539@gmail.com] 
+📫 [shivsim2005@gmail.com] 
 
