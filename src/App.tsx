@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,18 +11,10 @@ import SplashScreen from "./components/SplashScreen";
 const queryClient = new QueryClient();
 
 const App = () => {
+  // Always show splash on page load
   const [showSplash, setShowSplash] = useState(true);
 
-  useEffect(() => {
-    // Check if splash was already shown in this session
-    const splashShown = sessionStorage.getItem('splashShown');
-    if (splashShown) {
-      setShowSplash(false);
-    }
-  }, []);
-
   const handleSplashFinish = () => {
-    sessionStorage.setItem('splashShown', 'true');
     setShowSplash(false);
   };
 

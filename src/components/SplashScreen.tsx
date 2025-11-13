@@ -13,12 +13,12 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(timer);
-          setTimeout(onFinish, 300);
+          setTimeout(onFinish, 500); // Delay before transitioning
           return 100;
         }
-        return prev + 2;
+        return prev + 1; // Slower progress (1% instead of 2%)
       });
-    }, 30);
+    }, 50); // Slower interval (50ms instead of 30ms)
 
     return () => clearInterval(timer);
   }, [onFinish]);
