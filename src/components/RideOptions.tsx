@@ -17,6 +17,14 @@ const RideOptions: React.FC<RideOptionsProps> = ({ source, destination }) => {
   // Calculate dynamic fares based on distance
   useEffect(() => {
     if (source && destination) {
+      // Check if source and destination are the same
+      if (source.trim().toLowerCase() === destination.trim().toLowerCase()) {
+        // Same location - no rides available
+        setRideOptions([]);
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
       
       const calculateFares = async () => {
@@ -218,7 +226,14 @@ const RideOptions: React.FC<RideOptionsProps> = ({ source, destination }) => {
         </Tabs>
       ) : (
         <div className="glass p-8 text-center">
-          <p className="text-white/70">Enter pickup and destination to see available rides</p>
+          {source && destination && source.trim().toLowerCase() === destination.trim().toLowerCase() ? (
+            <div>
+              <p className="text-yellow-400 text-lg mb-2">🤔 Same Location</p>
+              <p className="text-white/70">Your pickup and destination are the same. Please enter different locations.</p>
+            </div>
+          ) : (
+            <p className="text-white/70">Enter pickup and destination to see available rides</p>
+          )}
         </div>
       )}
     </div>
