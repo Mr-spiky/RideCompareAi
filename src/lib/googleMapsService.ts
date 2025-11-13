@@ -93,20 +93,86 @@ class GoogleMapsService {
     }
 
     try {
+      // Try Routes API (New) first - it's the recommended modern API
+      console.log('🔍 Trying Routes API (New)...');
+      const routesResult = await this.tryRoutesAPI(origin, destination);
+      if (routesResult) {
+        return routesResult;
+      }
+
+      // Try loading Maps JavaScript API for legacy APIs
       await this.loadGoogleMaps();
 
-      // Try Distance Matrix API first
+      // Try Distance Matrix API
+      console.log('🔍 Trying Distance Matrix API...');
       const distanceMatrixResult = await this.tryDistanceMatrix(origin, destination);
       if (distanceMatrixResult) {
         return distanceMatrixResult;
       }
 
       // Fallback to Directions API if Distance Matrix fails
-      console.log('⚠️ Distance Matrix failed, trying Directions API...');
+      console.log('🔍 Trying Directions API...');
       return await this.tryDirectionsAPI(origin, destination);
 
     } catch (error) {
       console.error('Distance calculation error:', error);
+      return null;
+    }
+  }
+
+  // Try Routes API (New) - Modern API using REST endpoint
+  private async tryRoutesAPI(
+    origin: string,
+    destination: string
+  ): Promise<DistanceMatrixResponse | null> {
+    try {
+      const response = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': this.apiKey,
+          'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration'
+        },
+        body: JSON.stringify({
+          origin: {
+            address: origin
+          },
+          destination: {
+            address: destination
+          },
+          travelMode: 'DRIVE',
+          routingPreference: 'TRAFFIC_AWARE'
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn('⚠️ Routes API error:', response.status, errorText);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const distanceKm = (route.distanceMeters / 1000).toFixed(1);
+        const durationMin = Math.round(parseInt(route.duration.replace('s', '')) / 60);
+        
+        console.log('✅ Real Google Maps distance retrieved (Routes API):', `${distanceKm} km`);
+        
+        return {
+          distance: `${distanceKm} km`,
+          distanceValue: route.distanceMeters,
+          duration: durationMin >= 60 
+            ? `${Math.floor(durationMin / 60)} hr ${durationMin % 60} min`
+            : `${durationMin} min`,
+          durationValue: parseInt(route.duration.replace('s', ''))
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Routes API error:', error);
       return null;
     }
   }
