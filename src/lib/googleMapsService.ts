@@ -102,9 +102,12 @@ class GoogleMapsService {
             unitSystem: google.maps.UnitSystem.METRIC,
           },
           (response, status) => {
+            console.log('Distance Matrix API Response:', { response, status });
+            
             if (status === 'OK' && response && response.rows[0]?.elements[0]) {
               const element = response.rows[0].elements[0];
               if (element.status === 'OK') {
+                console.log('✅ Real Google Maps distance retrieved:', element.distance.text);
                 resolve({
                   distance: element.distance.text,
                   distanceValue: element.distance.value,
@@ -112,9 +115,14 @@ class GoogleMapsService {
                   durationValue: element.duration.value,
                 });
               } else {
+                console.warn('⚠️ Distance Matrix element status:', element.status);
                 resolve(null);
               }
             } else {
+              console.warn('⚠️ Distance Matrix API status:', status);
+              if (response && 'errorMessage' in response) {
+                console.error('API Error:', (response as any).errorMessage);
+              }
               resolve(null);
             }
           }

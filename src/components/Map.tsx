@@ -23,6 +23,17 @@ const Map: React.FC<MapProps> = ({ source, destination }) => {
   // Fetch real or simulated route information
   useEffect(() => {
     if (source && destination) {
+      // Check if source and destination are the same
+      if (source.trim().toLowerCase() === destination.trim().toLowerCase()) {
+        setRouteInfo({
+          distance: '0 km',
+          duration: '0 min',
+          isReal: true
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
       
       const fetchRouteInfo = async () => {
