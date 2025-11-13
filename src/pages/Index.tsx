@@ -5,17 +5,28 @@ import LocationInput from '@/components/LocationInput';
 import Map from '@/components/Map';
 import RideOptions from '@/components/RideOptions';
 import UserPreferences from '@/components/UserPreferences';
+import ImpactSection from '@/components/ImpactSection';
+import TestimonialSection from '@/components/TestimonialSection';
+import SavingsTracker from '@/components/SavingsTracker';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Info } from 'lucide-react';
+import { RefreshCw, Info, Heart, Sparkles } from 'lucide-react';
 import { googleMapsService } from '@/lib/googleMapsService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const [source, setSource] = useState<string | undefined>();
   const [destination, setDestination] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [showApiWarning, setShowApiWarning] = useState(true);
+  const [comparisonCount, setComparisonCount] = useState(0);
   const isGoogleMapsConfigured = googleMapsService.isConfigured();
+  
+  useEffect(() => {
+    // Load comparison count
+    const count = localStorage.getItem('comparisonCount');
+    if (count) setComparisonCount(parseInt(count));
+  }, []);
   
   const handleSourceChange = (location: string) => {
     setSource(location);
@@ -28,9 +39,43 @@ const Index = () => {
   const handleRefreshRides = () => {
     if (source && destination) {
       setIsLoading(true);
+      
+      // Update comparison count
+      const newCount = comparisonCount + 1;
+      setComparisonCount(newCount);
+      localStorage.setItem('comparisonCount', newCount.toString());
+      
+      // Update rides compared for savings tracker
+      const ridesCompared = parseInt(localStorage.getItem('ridesCompared') || '0');
+      localStorage.setItem('ridesCompared', (ridesCompared + 1).toString());
+      
       // Simulate API call
       setTimeout(() => {
         setIsLoading(false);
+        
+        // Show success toast with celebration
+        toast({
+          title: "🎉 Rides Found!",
+          description: `Comparing ${source} → ${destination}. Check out the best deals below!`,
+        });
+        
+        // Milestone celebrations
+        if (newCount === 1) {
+          toast({
+            title: "🌟 Welcome Aboard!",
+            description: "You've made your first comparison! Keep saving smart! 💰",
+          });
+        } else if (newCount === 10) {
+          toast({
+            title: "🏆 10 Comparisons!",
+            description: "You're becoming a smart rider! Keep it up! 🚀",
+          });
+        } else if (newCount % 50 === 0) {
+          toast({
+            title: `🎊 ${newCount} Comparisons Milestone!`,
+            description: "You're a RideCompare.AI pro! Amazing! 🌟",
+          });
+        }
       }, 1500);
     }
   };
@@ -110,30 +155,42 @@ const Index = () => {
             
             {/* Ride options */}
             <RideOptions source={source} destination={destination} />
+            
+            {/* Impact Section */}
+            <ImpactSection />
           </div>
           
-          <div>
+          <div className="space-y-6">
+            {/* Savings Tracker */}
+            <SavingsTracker />
+            
             {/* User preferences */}
             <UserPreferences />
             
-            {/* AI insights (placeholder for future feature) */}
-            <div className="glass p-6 rounded-xl mt-6 hover:bg-white/25 transition-all duration-300">
-              <h3 className="font-semibold mb-4 text-lg text-white">AI Insights</h3>
+            {/* Testimonials */}
+            <TestimonialSection />
+            
+            {/* AI insights */}
+            <div className="glass p-6 rounded-xl hover:bg-white/25 transition-all duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+                <h3 className="font-semibold text-lg text-white">AI Insights</h3>
+              </div>
               <div className="space-y-3 text-sm text-white/80">
                 <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-cyan-300 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-cyan-300 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
                   <p>Surge pricing likely in 30 mins for Ola</p>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-yellow-300 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-yellow-300 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
                   <p>Uber prices are 12% higher than average</p>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-green-300 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-green-300 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
                   <p>Lower fares typically available after 8pm</p>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <div className="w-2 h-2 bg-purple-300 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-purple-300 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
                   <p>Based on your history, you prefer Rapido for this route</p>
                 </div>
               </div>
@@ -143,8 +200,21 @@ const Index = () => {
         </div>
       </main>
       
-      <footer className="container mx-auto px-4 mt-12 text-center text-white/50 text-sm">
-        <p>© 2025 RideCompare.AI • AI-powered urban mobility assistant</p>
+      <footer className="container mx-auto px-4 mt-12 py-8 border-t border-white/10">
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-2 text-white/70">
+            <Heart className="w-5 h-5 text-red-400 animate-pulse" />
+            <p>Made with love for smarter urban mobility</p>
+          </div>
+          <p className="text-white/50 text-sm">
+            © 2025 RideCompare.AI • AI-powered urban mobility assistant
+          </p>
+          <div className="flex justify-center gap-6 text-sm text-white/40">
+            <a href="#" className="hover:text-cyan-400 transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-cyan-400 transition-colors">Terms of Service</a>
+            <a href="https://github.com/Mr-spiky/RideCompareAi" className="hover:text-cyan-400 transition-colors" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+        </div>
       </footer>
     </div>
   );
